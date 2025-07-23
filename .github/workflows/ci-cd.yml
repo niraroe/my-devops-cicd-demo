@@ -97,14 +97,17 @@ jobs:
         run: |
           docker push $ECR_REGISTRY/$IMAGE_NAME:$VERSION
       
-      - name: Authenticate Docker on EC2
+      - name: Authenticate Docker on EC2 to ECR
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          script: |
-            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        script: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
       
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v0.1.8
