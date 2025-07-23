@@ -110,7 +110,7 @@ jobs:
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REGISTRY: $ECR_REGISTRY
       
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v0.1.8
@@ -128,4 +128,6 @@ jobs:
 
             echo "Running new container..."
             docker run -d --name hello-container -p 80:80 ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
-
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REGISTRY: $ECR_REGISTRY
