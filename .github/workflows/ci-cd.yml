@@ -21,6 +21,55 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Determine version bump type
+        id: bump
+        run: |
+          MESSAGE=$(git log -1 --pretty=%B)
+          echo "Last commit message: $MESSAGE"
+
+          if echo "$MESSAGE" | grep -q "BREAKING CHANGE"; then
+            echo "bump=major" >> $GITHUB_OUTPUT
+          elif echo "$MESSAGE" | grep -q "^feat"; then
+            echo "bump=minor" >> $GITHUB_OUTPUT
+          elif echo "$MESSAGE" | grep -q "^fix"; then
+            echo "bump=patch" >> $GITHUB_OUTPUT
+          else
+            echo "bump=patch" >> $GITHUB_OUTPUT
+          fi
+      - name: Bump version file
+        id: version_bump
+        run: |
+          bump=${{ steps.bump.outputs.bump }}
+          echo "Version bump type: $bump"
+
+          version=$(cat VERSION)
+          IFS='.' read -r major minor patch <<< "$version"
+
+          if [ "$bump" = "major" ]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [ "$bump" = "minor" ]; then
+            minor=$((minor + 1))
+            patch=0
+          else
+            patch=$((patch + 1))
+          fi
+
+          new_version="$major.$minor.$patch"
+          echo $new_version > VERSION
+          echo "New version: $new_version"
+
+          echo "VERSION=$new_version" >> $GITHUB_ENV
+      
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add VERSION
+          git commit -m "ci: bump version to $(cat VERSION)"
+          git push origin main
+
       - name: Read version
         id: get_version
         run: |
