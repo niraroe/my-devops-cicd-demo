@@ -105,12 +105,12 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             echo "Pulling Docker image version ${{ env.VERSION }}"
-            docker pull $ECR_REGISTRY/$IMAGE_NAME:${{ env.VERSION }}
+            docker pull ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
 
             echo "Stopping existing container (if any)..."
             docker stop hello-container || true
             docker rm hello-container || true
 
             echo "Running new container..."
-            docker run -d --name hello-container -p 80:80 $ECR_REGISTRY/$IMAGE_NAME:${{ env.VERSION }}
+            docker run -d --name hello-container -p 80:80 ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
 
